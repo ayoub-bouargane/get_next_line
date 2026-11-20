@@ -10,7 +10,28 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "get_next_line.h"
+
+char	*ft_strdup(const char *s)
+{
+	char	*new;
+	size_t	i;
+
+	if (!s)
+		return (NULL);
+	new = malloc((ft_strlen(s) + 1) * sizeof(char));
+	if (!new)
+		return (NULL);
+	i = 0;
+	while (s[i])
+	{
+		new[i] = s[i];
+		i++;
+	}
+	new[i] = '\0';
+	return (new);
+}
 char *get_next_line(int fd)
 {
-    
+
 }
