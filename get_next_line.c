@@ -12,37 +12,23 @@
 
 #include "get_next_line.h"
 
-char	*ft_strdup(const char *s)
-{
-	char	*new;
-	size_t	i;
-
-	if (!s)
-		return (NULL);
-	new = malloc((ft_strlen(s) + 1) * sizeof(char));
-	if (!new)
-		return (NULL);
-	i = 0;
-	while (s[i])
-	{
-		new[i] = s[i];
-		i++;
-	}
-	new[i] = '\0';
-	return (new);
-}
-
 void	*ft_free(char **remainder)
 {
+	if (!remainder || !*remainder)
+		return (NULL);
 	free(*remainder);
 	*remainder = NULL;
 	return (NULL);
 }
 
-ssize_t	read_fill_remainder(int fd, char **remainder, char *buffer)
+ssize_t	read_fill_remainder(int fd, char **remainder)
 {
 	ssize_t	read_byt;
+	char	*buffer;
 
+	buffer = malloc(((size_t)BUFFER_SIZE + 1) * sizeof(char));
+	if (!buffer)
+		return (-1);
 	read_byt = 0;
 	while (!ft_strcheck(*remainder, '\n'))
 	{
@@ -52,25 +38,24 @@ ssize_t	read_fill_remainder(int fd, char **remainder, char *buffer)
 		buffer[read_byt] = '\0';
 		*remainder = ft_strjoin(*remainder, buffer);
 		if (!*remainder)
+		{
+			free(buffer);
 			return (-1);
+		}
 	}
+	free(buffer);
 	return (read_byt);
 }
 
 char	*get_next_line(int fd)
 {
 	static char	*remainder;
-	char		*buffer;
 	ssize_t		read_byt;
 	char		*new;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	buffer = malloc(((size_t)BUFFER_SIZE + 1) * sizeof(char));
-	if (!buffer)
-		return (NULL);
-	read_byt = read_fill_remainder(fd, &remainder, buffer);
-	free(buffer);
+	read_byt = read_fill_remainder(fd, &remainder);
 	if (read_byt < 0 || !remainder || remainder[0] == '\0')
 		return (ft_free(&remainder));
 	new = get_line_from_remainder(remainder);

@@ -20,18 +20,21 @@
 #  define BUFFER_SIZE 42
 # endif
 
-# ifndef FD_MAX
-#  define FD_MAX 1024
-# endif
+typedef struct s_node
+{
+	int				fd;
+	char			*rem;
+	struct s_node	*next;
+}	t_node;
 
 size_t	ft_strlen(const char *s);
-char	*ft_strdup(const char *s);
 int		ft_strcheck(const char *s, int c);
 char	*update_remainder(char *remainder);
 char	*ft_strjoin(char *s1, char *s2);
 char	*get_line_from_remainder(char *remainder);
-void	*ft_free(char **remainder);
-ssize_t	read_fill_remainder(int fd, char **remainder, char *buffer);
+ssize_t	read_fill_remainder(int fd, char **remainder);
 char	*get_next_line(int fd);
+void	*remove_node(t_node **head, int fd);
+t_node	*get_node(t_node **head, int fd);
 
 #endif

@@ -51,12 +51,15 @@ char	*update_remainder(char *remainder)
 	i = 0;
 	while (remainder[i] && remainder[i] != '\n')
 		i++;
-	if (!remainder[i] || !remainder[i + 1])
-		return (free(remainder), NULL);
-	i++;
-	new = malloc(((ft_strlen(remainder) - i) + 1) * sizeof(char));
+	new = NULL;
+	if (remainder[i] && remainder[i + 1])
+		new = malloc((ft_strlen(remainder) - i) * sizeof(char));
 	if (!new)
-		return (free(remainder), NULL);
+	{
+		free(remainder);
+		return (NULL);
+	}
+	i++;
 	j = 0;
 	while (remainder[i])
 		new[j++] = remainder[i++];
@@ -73,15 +76,14 @@ char	*ft_strjoin(char *s1, char *s2)
 
 	if (!s2)
 		return (NULL);
-	if (!s1)
-		s1 = ft_strdup("");
-	if (!s1)
-		return (NULL);
 	new = malloc((ft_strlen(s1) + ft_strlen(s2) + 1) * sizeof(char));
 	if (!new)
-		return (free(s1), NULL);
+	{
+		free(s1);
+		return (NULL);
+	}
 	i = 0;
-	while (s1[i])
+	while (s1 && s1[i])
 	{
 		new[i] = s1[i];
 		i++;

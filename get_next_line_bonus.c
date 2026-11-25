@@ -12,39 +12,58 @@
 
 #include "get_next_line_bonus.h"
 
-char	*ft_strdup(const char *s)
+t_node	*get_node(t_node **head, int fd)
 {
-	char	*new;
-	size_t	i;
+	t_node	*node;
 
-	if (!s)
-		return (NULL);
-	new = malloc((ft_strlen(s) + 1) * sizeof(char));
-	if (!new)
-		return (NULL);
-	i = 0;
-	while (s[i])
+	node = *head;
+	while (node)
 	{
-		new[i] = s[i];
-		i++;
+		if (node->fd == fd)
+			return (node);
+		node = node->next;
 	}
-	new[i] = '\0';
-	return (new);
+	node = malloc(sizeof(t_node));
+	if (!node)
+		return (NULL);
+	node->fd = fd;
+	node->rem = NULL;
+	node->next = *head;
+	*head = node;
+	return (node);
 }
 
-void	*ft_free(char **remainder)
+void	*remove_node(t_node **head, int fd)
 {
-	if (!remainder || !*remainder)
+	t_node	*curr;
+	t_node	*tmp;
+
+	curr = *head;
+	tmp = NULL;
+	while (curr && curr->fd != fd)
+	{
+		tmp = curr;
+		curr = curr->next;
+	}
+	if (!curr)
 		return (NULL);
-	free(*remainder);
-	*remainder = NULL;
+	if (!tmp)
+		*head = curr->next;
+	else
+		tmp->next = curr->next;
+	free(curr->rem);
+	free(curr);
 	return (NULL);
 }
 
-ssize_t	read_fill_remainder(int fd, char **remainder, char *buffer)
+ssize_t	read_fill_remainder(int fd, char **remainder)
 {
 	ssize_t	read_byt;
+	char	*buffer;
 
+	buffer = malloc(((size_t)BUFFER_SIZE + 1) * sizeof(char));
+	if (!buffer)
+		return (-1);
 	read_byt = 0;
 	while (!ft_strcheck(*remainder, '\n'))
 	{
@@ -54,30 +73,35 @@ ssize_t	read_fill_remainder(int fd, char **remainder, char *buffer)
 		buffer[read_byt] = '\0';
 		*remainder = ft_strjoin(*remainder, buffer);
 		if (!*remainder)
+		{
+			free(buffer);
 			return (-1);
+		}
 	}
+	free(buffer);
 	return (read_byt);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*remainder[FD_MAX];
-	char		*buffer;
-	char		*new;
-	ssize_t		read_byt;
+	static t_node	*head;
+	t_node			*node;
+	char			*line;
+	ssize_t			read_byt;
 
-	if (fd < 0 || fd >= FD_MAX || BUFFER_SIZE <= 0)
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	buffer = malloc(((size_t)BUFFER_SIZE + 1) * sizeof(char));
-	if (!buffer)
+	node = get_node(&head, fd);
+	if (!node)
 		return (NULL);
-	read_byt = read_fill_remainder(fd, &remainder[fd], buffer);
-	free(buffer);
-	if (read_byt < 0 || !remainder[fd] || remainder[fd][0] == '\0')
-		return (ft_free(&remainder[fd]));
-	new = get_line_from_remainder(remainder[fd]);
-	if (!new)
-		return (ft_free(&remainder[fd]));
-	remainder[fd] = update_remainder(remainder[fd]);
-	return (new);
+	read_byt = read_fill_remainder(fd, &node->rem);
+	if (read_byt < 0 || !node->rem || !node->rem[0])
+		return (remove_node(&head, fd));
+	line = get_line_from_remainder(node->rem);
+	if (!line)
+		return (remove_node(&head, fd));
+	node->rem = update_remainder(node->rem);
+	if (!node->rem)
+		remove_node(&head, fd);
+	return (line);
 }
